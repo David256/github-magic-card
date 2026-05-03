@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GitHub Repo · Magic Card Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Crimson+Pro:ital,wght@0,300;0,400;1,300;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --void: #03020a;
+    --deep: #080616;
+    --nebula-1: #1a0a3a;
+    --nebula-2: #0d1a3a;
+    --star-gold: #f0c060;
+    --star-silver: #c8d8f0;
+    --nova-blue: #4a9eff;
+    --nova-purple: #a060ff;
+    --nova-cyan: #00e5ff;
+    --supernova: #ff6030;
+    --mana-green: #48ff88;
+    --card-w: 380px;
+    --card-h: auto;
+    --border-gold: #b8922a;
+    --border-shine: #f5d98a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    min-height: 100vh;
+    background: var(--void);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: 'Crimson Pro', Georgia, serif;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Starfield */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(1px 1px at 10% 20%, rgba(200,216,240,0.8) 0%, transparent 100%),
+      radial-gradient(1px 1px at 30% 80%, rgba(200,216,240,0.6) 0%, transparent 100%),
+      radial-gradient(1.5px 1.5px at 55% 15%, rgba(240,192,96,0.9) 0%, transparent 100%),
+      radial-gradient(1px 1px at 70% 55%, rgba(200,216,240,0.7) 0%, transparent 100%),
+      radial-gradient(1px 1px at 85% 35%, rgba(200,216,240,0.5) 0%, transparent 100%),
+      radial-gradient(2px 2px at 20% 60%, rgba(74,158,255,0.6) 0%, transparent 100%),
+      radial-gradient(1px 1px at 90% 75%, rgba(200,216,240,0.8) 0%, transparent 100%),
+      radial-gradient(1px 1px at 45% 45%, rgba(200,216,240,0.4) 0%, transparent 100%),
+      radial-gradient(1.5px 1.5px at 60% 90%, rgba(160,96,255,0.7) 0%, transparent 100%),
+      radial-gradient(1px 1px at 5% 50%, rgba(200,216,240,0.6) 0%, transparent 100%),
+      radial-gradient(1px 1px at 75% 10%, rgba(200,216,240,0.5) 0%, transparent 100%),
+      radial-gradient(2px 2px at 35% 30%, rgba(0,229,255,0.4) 0%, transparent 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Nebula bg glow */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 20% 30%, rgba(26,10,58,0.6) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 35% at 80% 70%, rgba(13,26,58,0.5) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 30% at 60% 20%, rgba(74,158,255,0.08) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  header {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    padding: 48px 24px 32px;
+    width: 100%;
+    max-width: 700px;
+  }
+
+  .logo-text {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(1.4rem, 4vw, 2rem);
+    font-weight: 900;
+    letter-spacing: 0.15em;
+    background: linear-gradient(135deg, var(--star-gold) 0%, var(--border-shine) 40%, var(--nova-cyan) 70%, var(--nova-purple) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: none;
+    margin-bottom: 6px;
+  }
+
+  .logo-sub {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    color: rgba(200,216,240,0.4);
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+  }
+
+  /* Input panel */
+  .input-panel {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto 48px;
+    padding: 0 24px;
+  }
+
+  .form-glass {
+    background: rgba(8,6,22,0.85);
+    border: 1px solid rgba(184,146,42,0.3);
+    border-radius: 16px;
+    padding: 28px 28px 24px;
+    backdrop-filter: blur(20px);
+    box-shadow:
+      0 0 40px rgba(74,158,255,0.05),
+      inset 0 1px 0 rgba(245,217,138,0.1);
+  }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    margin-bottom: 16px;
+    align-items: end;
+  }
+
+  .field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .field-group label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--star-gold);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  .field-group input {
+    background: rgba(3,2,10,0.8);
+    border: 1px solid rgba(184,146,42,0.25);
+    border-radius: 8px;
+    color: var(--star-silver);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.82rem;
+    padding: 11px 14px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+  }
+
+  .field-group input::placeholder { color: rgba(200,216,240,0.25); }
+  .field-group input:focus {
+    border-color: rgba(74,158,255,0.5);
+    box-shadow: 0 0 0 3px rgba(74,158,255,0.08), inset 0 0 20px rgba(74,158,255,0.03);
+  }
+
+  .optional-row {
+    margin-bottom: 20px;
+  }
+
+  /* Image source tabs */
+  .img-source-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 10px;
+    border: 1px solid rgba(184,146,42,0.25);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .img-tab {
+    flex: 1;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    background: rgba(3,2,10,0.8);
+    border: none;
+    color: rgba(200,216,240,0.4);
+    padding: 8px 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-right: 1px solid rgba(184,146,42,0.2);
+  }
+
+  .img-tab:last-child { border-right: none; }
+
+  .img-tab.active {
+    background: rgba(26,10,58,0.9);
+    color: var(--star-gold);
+    box-shadow: inset 0 -2px 0 var(--border-gold);
+  }
+
+  .img-tab:hover:not(.active) {
+    color: rgba(200,216,240,0.7);
+    background: rgba(8,6,22,0.9);
+  }
+
+  .img-panel { display: none; }
+  .img-panel.active { display: block; }
+
+  /* Drop zone */
+  .drop-zone {
+    border: 1.5px dashed rgba(184,146,42,0.35);
+    border-radius: 8px;
+    padding: 18px 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: rgba(3,2,10,0.6);
+    position: relative;
+  }
+
+  .drop-zone:hover, .drop-zone.drag-over {
+    border-color: rgba(74,158,255,0.6);
+    background: rgba(74,158,255,0.04);
+  }
+
+  .drop-zone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+
+  .drop-icon {
+    font-size: 1.5rem;
+    margin-bottom: 6px;
+    display: block;
+    filter: drop-shadow(0 0 6px rgba(74,158,255,0.3));
+  }
+
+  .drop-text {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    color: rgba(200,216,240,0.45);
+    letter-spacing: 0.1em;
+    line-height: 1.6;
+  }
+
+  .drop-text strong {
+    color: var(--nova-blue);
+    font-weight: 700;
+  }
+
+  .drop-preview {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0 0;
+  }
+
+  .drop-preview.visible { display: flex; }
+
+  .drop-preview-thumb {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    object-fit: cover;
+    border: 1px solid rgba(184,146,42,0.4);
+  }
+
+  .drop-preview-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .drop-preview-name {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.62rem;
+    color: var(--mana-green);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .drop-preview-size {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem;
+    color: rgba(200,216,240,0.35);
+  }
+
+  .drop-clear {
+    background: none;
+    border: 1px solid rgba(255,96,48,0.4);
+    color: var(--supernova);
+    border-radius: 5px;
+    font-size: 0.65rem;
+    padding: 3px 8px;
+    cursor: pointer;
+    font-family: 'Space Mono', monospace;
+    transition: all 0.15s;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 2;
+  }
+
+  .drop-clear:hover { background: rgba(255,96,48,0.1); }
+
+  .btn-generate {
+    font-family: 'Cinzel', serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, #2a1a00 0%, #5a3a00 50%, #2a1a00 100%);
+    border: 1px solid var(--border-gold);
+    color: var(--star-gold);
+    border-radius: 8px;
+    padding: 12px 28px;
+    cursor: pointer;
+    transition: all 0.25s;
+    white-space: nowrap;
+    position: relative;
+    overflow: hidden;
+    align-self: flex-end;
+    height: 43px;
+  }
+
+  .btn-generate::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(245,217,138,0.15) 0%, transparent 100%);
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+
+  .btn-generate:hover::before { opacity: 1; }
+  .btn-generate:hover {
+    box-shadow: 0 0 20px rgba(240,192,96,0.2), 0 0 40px rgba(240,192,96,0.05);
+    border-color: var(--border-shine);
+  }
+
+  .btn-generate:active { transform: scale(0.98); }
+
+  .error-msg {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--supernova);
+    text-align: center;
+    margin-top: 12px;
+    display: none;
+    letter-spacing: 0.05em;
+  }
+
+  /* Card output area */
+  .card-area {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 24px 80px;
+    width: 100%;
+  }
+
+  /* === THE MAGIC CARD === */
+  .magic-card {
+    width: var(--card-w);
+    background: linear-gradient(160deg, #1a0e30 0%, #0a0a20 40%, #0d1520 100%);
+    border-radius: 18px;
+    position: relative;
+    overflow: hidden;
+    box-shadow:
+      0 0 0 2px var(--border-gold),
+      0 0 0 4px #1a0a00,
+      0 0 0 6px rgba(184,146,42,0.4),
+      0 20px 80px rgba(0,0,0,0.8),
+      0 0 60px rgba(74,158,255,0.08),
+      inset 0 0 80px rgba(26,10,58,0.3);
+    font-family: 'Crimson Pro', serif;
+  }
+
+  /* Holographic shimmer overlay */
+  .magic-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      135deg,
+      transparent 0%,
+      rgba(74,158,255,0.04) 20%,
+      transparent 40%,
+      rgba(160,96,255,0.04) 60%,
+      transparent 80%,
+      rgba(0,229,255,0.03) 100%
+    );
+    z-index: 5;
+    pointer-events: none;
+    border-radius: 18px;
+  }
+
+  /* Star texture inside card */
+  .magic-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(1px 1px at 15% 25%, rgba(200,216,240,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 75% 10%, rgba(200,216,240,0.3) 0%, transparent 100%),
+      radial-gradient(1.5px 1.5px at 40% 60%, rgba(240,192,96,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 85% 70%, rgba(200,216,240,0.25) 0%, transparent 100%),
+      radial-gradient(1px 1px at 55% 85%, rgba(160,96,255,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 90% 40%, rgba(200,216,240,0.2) 0%, transparent 100%),
+      radial-gradient(1px 1px at 25% 80%, rgba(74,158,255,0.25) 0%, transparent 100%);
+    z-index: 1;
+    pointer-events: none;
+    border-radius: 18px;
+  }
+
+  .card-inner {
+    position: relative;
+    z-index: 10;
+    padding: 14px;
+  }
+
+  /* Card top bar: name + mana */
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    background: linear-gradient(90deg, rgba(26,10,58,0.9) 0%, rgba(13,26,58,0.9) 100%);
+    border: 1px solid rgba(184,146,42,0.5);
+    border-radius: 8px;
+    padding: 7px 12px;
+  }
+
+  .card-name {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: 0.88rem;
+    color: var(--star-gold);
+    letter-spacing: 0.08em;
+    text-shadow: 0 0 10px rgba(240,192,96,0.4);
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-right: 10px;
+  }
+
+  .mana-cost {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .mana-symbol {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6rem;
+    font-weight: 700;
+    font-family: 'Space Mono', monospace;
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+
+  .mana-u { background: radial-gradient(circle, #2060c0, #0a2060); color: #90c8ff; }
+  .mana-b { background: radial-gradient(circle, #301050, #100020); color: #c090ff; }
+
+  /* Image frame */
+  .card-image-frame {
+    border: 2px solid var(--border-gold);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 10px;
+    position: relative;
+    background: #000;
+  }
+
+  .card-image-frame img {
+    width: 100%;
+    display: block;
+    object-fit: cover;
+  }
+
+  /* Artist bar overlay on image */
+  .artist-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(0deg, rgba(0,0,0,0.85) 0%, transparent 100%);
+    padding: 12px 10px 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .artist-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid rgba(184,146,42,0.6);
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .artist-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .artist-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .artist-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.52rem;
+    color: rgba(200,216,240,0.5);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  .artist-name {
+    font-family: 'Cinzel', serif;
+    font-size: 0.72rem;
+    color: var(--star-gold);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Type line */
+  .card-type {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(90deg, rgba(13,26,58,0.85) 0%, rgba(26,10,58,0.85) 100%);
+    border: 1px solid rgba(184,146,42,0.4);
+    border-radius: 6px;
+    padding: 5px 10px;
+    margin-bottom: 10px;
+  }
+
+  .type-text {
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    color: var(--star-silver);
+    letter-spacing: 0.06em;
+  }
+
+  .set-symbol {
+    width: 18px;
+    height: 18px;
+    background: radial-gradient(circle, var(--star-gold), #7a5a00);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6rem;
+    color: #000;
+    font-weight: 700;
+  }
+
+  /* Text box */
+  .card-textbox {
+    background: rgba(3,2,10,0.7);
+    border: 1px solid rgba(184,146,42,0.3);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    min-height: 60px;
+    position: relative;
+  }
+
+  /* Subtle scroll pattern in textbox */
+  .card-textbox::before {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border: 1px solid rgba(184,146,42,0.08);
+    border-radius: 5px;
+    pointer-events: none;
+  }
+
+  .card-description {
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.82rem;
+    color: rgba(200,216,240,0.88);
+    line-height: 1.5;
+    font-style: italic;
+  }
+
+  .card-description em {
+    color: var(--star-silver);
+    font-style: normal;
+    font-weight: 400;
+  }
+
+  /* Stats */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .stat-block {
+    background: rgba(3,2,10,0.7);
+    border: 1px solid rgba(184,146,42,0.25);
+    border-radius: 8px;
+    padding: 10px 12px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-block.primary {
+    border-color: rgba(184,146,42,0.5);
+  }
+
+  .stat-block.primary::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(240,192,96,0.08) 0%, transparent 100%);
+    pointer-events: none;
+  }
+
+  .stat-icon {
+    font-size: 1.1rem;
+    margin-bottom: 2px;
+    display: block;
+  }
+
+  .stat-value {
+    font-family: 'Cinzel', serif;
+    font-size: 1.8rem;
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 2px;
+    display: block;
+  }
+
+  .stat-stars .stat-value { color: var(--star-gold); text-shadow: 0 0 15px rgba(240,192,96,0.5); }
+  .stat-forks .stat-value { color: var(--nova-cyan); text-shadow: 0 0 15px rgba(0,229,255,0.4); }
+
+  .stat-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    color: rgba(200,216,240,0.45);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+  }
+
+  .stats-secondary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .stat-small {
+    background: rgba(3,2,10,0.5);
+    border: 1px solid rgba(184,146,42,0.15);
+    border-radius: 6px;
+    padding: 7px 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .stat-small-icon { font-size: 0.9rem; }
+
+  .stat-small-content { flex: 1; }
+
+  .stat-small-value {
+    font-family: 'Cinzel', serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--nova-purple);
+    text-shadow: 0 0 10px rgba(160,96,255,0.4);
+    display: block;
+    line-height: 1;
+  }
+
+  .stat-issues .stat-small-value { color: var(--supernova); text-shadow: 0 0 10px rgba(255,96,48,0.4); }
+
+  .stat-small-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem;
+    color: rgba(200,216,240,0.4);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  /* Card footer */
+  .card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2px;
+  }
+
+  .card-collector {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem;
+    color: rgba(200,216,240,0.3);
+    letter-spacing: 0.08em;
+  }
+
+  .card-power-box {
+    background: linear-gradient(135deg, rgba(26,10,58,0.9), rgba(13,26,58,0.9));
+    border: 1px solid rgba(184,146,42,0.4);
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-family: 'Cinzel', serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--star-gold);
+  }
+
+  /* Divider ornament */
+  .ornament-divider {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .ornament-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(184,146,42,0.4), transparent);
+  }
+
+  .ornament-diamond {
+    width: 6px;
+    height: 6px;
+    background: var(--star-gold);
+    transform: rotate(45deg);
+    box-shadow: 0 0 6px rgba(240,192,96,0.6);
+    flex-shrink: 0;
+  }
+
+  /* Download button */
+  .btn-download {
+    margin-top: 24px;
+    font-family: 'Cinzel', serif;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, #001a0a 0%, #003020 50%, #001a0a 100%);
+    border: 1px solid var(--mana-green);
+    color: var(--mana-green);
+    border-radius: 8px;
+    padding: 11px 28px;
+    cursor: pointer;
+    transition: all 0.25s;
+    display: none;
+  }
+
+  .btn-download:hover {
+    box-shadow: 0 0 20px rgba(72,255,136,0.2);
+    background: linear-gradient(135deg, #001a0a 0%, #004030 50%, #001a0a 100%);
+  }
+
+  /* Loading state */
+  .loading-overlay {
+    display: none;
+    text-align: center;
+    padding: 48px;
+  }
+
+  .cosmos-spinner {
+    width: 60px;
+    height: 60px;
+    border: 2px solid rgba(184,146,42,0.2);
+    border-top-color: var(--star-gold);
+    border-right-color: var(--nova-cyan);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .loading-text {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    color: rgba(200,216,240,0.5);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+  }
+
+  /* Responsive */
+  @media (max-width: 480px) {
+    :root { --card-w: min(340px, calc(100vw - 48px)); }
+    .field-row { grid-template-columns: 1fr; }
+    .btn-generate { width: 100%; }
+  }
+
+  /* Card entry animation */
+  @keyframes cardReveal {
+    0% { opacity: 0; transform: translateY(30px) scale(0.95) rotateX(5deg); }
+    100% { opacity: 1; transform: translateY(0) scale(1) rotateX(0deg); }
+  }
+
+  .magic-card {
+    animation: none;
+  }
+
+  .magic-card.revealed {
+    animation: cardReveal 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  /* Number formatting util */
+  .shimmer-text {
+    background: linear-gradient(90deg, var(--star-gold) 0%, var(--star-silver) 50%, var(--star-gold) 100%);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: shimmer 3s ease infinite;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 200% center; }
+    100% { background-position: -200% center; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-text">✦ CODEX STELLARIS ✦</div>
+  <div class="logo-sub">GitHub Repository Card Forge</div>
+</header>
+
+<div class="input-panel">
+  <div class="form-glass">
+    <div class="field-row">
+      <div class="field-group">
+        <label>Repository URL or user/repo</label>
+        <input type="text" id="repoInput" placeholder="e.g. facebook/react or github.com/torvalds/linux" />
+      </div>
+      <button class="btn-generate" onclick="generateCard()">⬡ Forge</button>
+    </div>
+    <div class="optional-row">
+      <div class="field-group" style="gap:8px;">
+        <label>Custom image (optional — overrides avatar)</label>
+        <div class="img-source-tabs">
+          <button class="img-tab active" onclick="switchImgTab('url')">🔗 URL</button>
+          <button class="img-tab" onclick="switchImgTab('file')">📁 Upload file</button>
+          <button class="img-tab" onclick="switchImgTab('drop')">⬇ Drag &amp; drop</button>
+        </div>
+
+        <!-- URL panel -->
+        <div class="img-panel active" id="panel-url">
+          <input type="text" id="imageInput" placeholder="https://example.com/image.png" />
+        </div>
+
+        <!-- File picker panel -->
+        <div class="img-panel" id="panel-file">
+          <div class="drop-zone" id="fileZone">
+            <input type="file" id="fileInput" accept="image/*" onchange="handleFileSelect(this.files[0])" />
+            <span class="drop-icon">🖼</span>
+            <div class="drop-text"><strong>Click to browse</strong><br>PNG, JPG, GIF, WEBP, SVG</div>
+          </div>
+          <div class="drop-preview" id="filePreview">
+            <img class="drop-preview-thumb" id="fileThumb" src="" alt="" />
+            <div class="drop-preview-info">
+              <div class="drop-preview-name" id="fileName">—</div>
+              <div class="drop-preview-size" id="fileSize">—</div>
+            </div>
+            <button class="drop-clear" onclick="clearFile()">✕ Clear</button>
+          </div>
+        </div>
+
+        <!-- Drag & drop panel -->
+        <div class="img-panel" id="panel-drop">
+          <div class="drop-zone" id="dropZone"
+            ondragover="handleDragOver(event)"
+            ondragleave="handleDragLeave(event)"
+            ondrop="handleDrop(event)">
+            <input type="file" id="dropInput" accept="image/*" onchange="handleFileSelect(this.files[0], true)" />
+            <span class="drop-icon">✦</span>
+            <div class="drop-text"><strong>Drop image here</strong><br>or click to browse</div>
+          </div>
+          <div class="drop-preview" id="dropPreview">
+            <img class="drop-preview-thumb" id="dropThumb" src="" alt="" />
+            <div class="drop-preview-info">
+              <div class="drop-preview-name" id="dropName">—</div>
+              <div class="drop-preview-size" id="dropSize">—</div>
+            </div>
+            <button class="drop-clear" onclick="clearDrop()">✕ Clear</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="error-msg" id="errorMsg"></div>
+  </div>
+</div>
+
+<div class="card-area">
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="cosmos-spinner"></div>
+    <div class="loading-text">Channeling cosmic data...</div>
+  </div>
+
+  <div id="cardContainer"></div>
+
+  <button class="btn-download" id="downloadBtn" onclick="downloadCard()">⬇ Download Card</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+// <-- Image source state -->
+let localImageDataUrl = null;  // base64 from file upload
+let activeTab = 'url';
+
+function switchImgTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.img-tab').forEach((b, i) => {
+    b.classList.toggle('active', ['url','file','drop'][i] === tab);
+  });
+  document.querySelectorAll('.img-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + tab).classList.add('active');
+}
+
+function handleFileSelect(file, isDrop = false) {
+  if (!file || !file.type.startsWith('image/')) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    localImageDataUrl = e.target.result;
+    const prefix = isDrop ? 'drop' : 'file';
+    document.getElementById(prefix + 'Thumb').src = localImageDataUrl;
+    document.getElementById(prefix + 'Name').textContent = file.name;
+    document.getElementById(prefix + 'Size').textContent = formatFileSize(file.size);
+    document.getElementById(prefix + 'Preview').classList.add('visible');
+    // hide the zone content area (keep input accessible)
+    const zone = document.getElementById(isDrop ? 'dropZone' : 'fileZone');
+    zone.querySelector('.drop-icon').style.display = 'none';
+    zone.querySelector('.drop-text').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function formatFileSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function clearFile() {
+  localImageDataUrl = null;
+  document.getElementById('fileInput').value = '';
+  document.getElementById('filePreview').classList.remove('visible');
+  document.getElementById('fileZone').querySelector('.drop-icon').style.display = '';
+  document.getElementById('fileZone').querySelector('.drop-text').style.display = '';
+}
+
+function clearDrop() {
+  localImageDataUrl = null;
+  document.getElementById('dropInput').value = '';
+  document.getElementById('dropPreview').classList.remove('visible');
+  document.getElementById('dropZone').querySelector('.drop-icon').style.display = '';
+  document.getElementById('dropZone').querySelector('.drop-text').style.display = '';
+}
+
+function handleDragOver(e) {
+  e.preventDefault();
+  e.currentTarget.classList.add('drag-over');
+}
+
+function handleDragLeave(e) {
+  e.currentTarget.classList.remove('drag-over');
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) handleFileSelect(file, true);
+}
+
+function getCustomImage() {
+  if (activeTab === 'url') {
+    return document.getElementById('imageInput').value.trim() || null;
+  }
+  return localImageDataUrl || null;
+}
+
+// <-- Core logic -->
+function parseRepo(input) {
+  input = input.trim().replace(/\/$/, '');
+  const urlMatch = input.match(/github\.com\/([^\/]+\/[^\/\s#?]+)/i);
+  if (urlMatch) return urlMatch[1];
+  if (/^[\w.-]+\/[\w.-]+$/.test(input)) return input;
+  return null;
+}
+
+function formatNum(n) {
+  if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+  if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
+  return n.toString();
+}
+
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function hideError() {
+  document.getElementById('errorMsg').style.display = 'none';
+}
+
+async function generateCard() {
+  hideError();
+  const repoStr = parseRepo(document.getElementById('repoInput').value);
+  const customImage = getCustomImage();
+
+  if (!repoStr) {
+    showError('⚠ Please enter a valid GitHub repository (e.g. torvalds/linux)');
+    return;
+  }
+
+  document.getElementById('loadingOverlay').style.display = 'block';
+  document.getElementById('cardContainer').innerHTML = '';
+  document.getElementById('downloadBtn').style.display = 'none';
+
+  try {
+    const [repoRes, issuesRes, pullsRes] = await Promise.all([
+      fetch(`https://api.github.com/repos/${repoStr}`),
+      fetch(`https://api.github.com/search/issues?q=repo:${repoStr}+type:issue+state:open&per_page=1`),
+      fetch(`https://api.github.com/search/issues?q=repo:${repoStr}+type:pr+state:open&per_page=1`)
+    ]);
+
+    if (!repoRes.ok) {
+      const err = await repoRes.json();
+      throw new Error(err.message || 'Repository not found');
+    }
+
+    const repo = await repoRes.json();
+    const issuesData = issuesRes.ok ? await issuesRes.json() : { total_count: repo.open_issues_count };
+    const pullsData = pullsRes.ok ? await pullsRes.json() : { total_count: 0 };
+
+    const openIssues = issuesData.total_count ?? repo.open_issues_count;
+    const openPRs = pullsData.total_count ?? 0;
+
+    const imageUrl = customImage || repo.owner.avatar_url;
+    const ownerLogin = repo.owner.login;
+    const ownerAvatar = repo.owner.avatar_url;
+    const description = repo.description || 'No description provided for this stellar artifact.';
+    const language = repo.language || 'Polyglot';
+    const stars = repo.stargazers_count;
+    const forks = repo.forks_count;
+    const cardName = repo.name.replace(/-/g, ' ').replace(/_/g, ' ');
+    const isOrg = repo.owner.type === 'Organization';
+
+    // If local image, no need to load - we have the data URL already
+    if (customImage && customImage.startsWith('data:')) {
+      const tmpImg = new Image();
+      tmpImg.onload = () => renderCard({
+        cardName, repo, ownerLogin, ownerAvatar, imageUrl: customImage,
+        description, language, stars, forks, openIssues, openPRs,
+        isOrg, imgW: tmpImg.naturalWidth, imgH: tmpImg.naturalHeight,
+        isLocal: true
+      });
+      tmpImg.src = customImage;
+      return;
+    }
+
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = function() {
+      renderCard({
+        cardName, repo, ownerLogin, ownerAvatar, imageUrl,
+        description, language, stars, forks, openIssues, openPRs,
+        isOrg, imgW: img.naturalWidth, imgH: img.naturalHeight, isLocal: false
+      });
+    };
+    img.onerror = function() {
+      renderCard({
+        cardName, repo, ownerLogin, ownerAvatar, imageUrl: ownerAvatar,
+        description, language, stars, forks, openIssues, openPRs,
+        isOrg, imgW: 1, imgH: 1, isLocal: false
+      });
+    };
+    img.src = imageUrl;
+
+  } catch (e) {
+    document.getElementById('loadingOverlay').style.display = 'none';
+    showError('⚠ ' + e.message);
+  }
+}
+
+function renderCard(d) {
+  document.getElementById('loadingOverlay').style.display = 'none';
+
+  const cardW = 380;
+  const aspect = d.imgH / d.imgW;
+  const imgHeight = Math.round(cardW * aspect);
+  const imgMaxH = Math.min(Math.max(imgHeight, 180), 500);
+
+  const typeLabel = d.isOrg ? `Legendary — ${d.language}` : `Artifact — ${d.language}`;
+  const powerStr = formatNum(d.stars + d.forks);
+  const fullName = d.repo.full_name;
+  const crossOriginAttr = d.isLocal ? '' : 'crossorigin="anonymous"';
+
+  const card = document.createElement('div');
+  card.className = 'magic-card';
+  card.id = 'theCard';
+
+  card.innerHTML = `
+    <div class="card-inner">
+      <div class="card-header">
+        <div class="card-name">${escHtml(cardName2Title(d.cardName))}</div>
+        <div class="mana-cost">
+          <div class="mana-symbol mana-u">◈</div>
+          <div class="mana-symbol mana-b">◇</div>
+        </div>
+      </div>
+
+      <div class="card-image-frame">
+        <img src="${d.imageUrl}" alt="${escHtml(d.repo.name)}" ${crossOriginAttr} style="min-height:180px; max-height:${imgMaxH}px; object-fit:cover; width:100%;" />
+        <div class="artist-bar">
+          <div class="artist-avatar">
+            <img src="${d.ownerAvatar}" alt="${escHtml(d.ownerLogin)}" crossorigin="anonymous" />
+          </div>
+          <div class="artist-info">
+            <div class="artist-label">${d.isOrg ? 'Organization' : 'Creator'}</div>
+            <div class="artist-name">${escHtml(d.ownerLogin)}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-type">
+        <div class="type-text">${escHtml(typeLabel)}</div>
+        <div class="set-symbol">✦</div>
+      </div>
+
+      <div class="card-textbox">
+        <div class="card-description">${escHtml(d.description)}</div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-block primary stat-stars">
+          <span class="stat-icon">★</span>
+          <span class="stat-value">${formatNum(d.stars)}</span>
+          <span class="stat-label">Stars</span>
+        </div>
+        <div class="stat-block primary stat-forks">
+          <span class="stat-icon">⑂</span>
+          <span class="stat-value">${formatNum(d.forks)}</span>
+          <span class="stat-label">Forks</span>
+        </div>
+      </div>
+
+      <div class="stats-secondary">
+        <div class="stat-small stat-issues">
+          <span class="stat-small-icon">⚑</span>
+          <div class="stat-small-content">
+            <span class="stat-small-value">${formatNum(d.openIssues)}</span>
+            <span class="stat-small-label">Open Issues</span>
+          </div>
+        </div>
+        <div class="stat-small stat-prs">
+          <span class="stat-small-icon">⤢</span>
+          <div class="stat-small-content">
+            <span class="stat-small-value">${formatNum(d.openPRs)}</span>
+            <span class="stat-small-label">Pull Requests</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="ornament-divider">
+        <div class="ornament-line"></div>
+        <div class="ornament-diamond"></div>
+        <div class="ornament-line"></div>
+      </div>
+
+      <div class="card-footer">
+        <div class="card-collector">✦ ${escHtml(fullName)} ✦</div>
+        <div class="card-power-box">${powerStr}/∞</div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('cardContainer').appendChild(card);
+  requestAnimationFrame(() => card.classList.add('revealed'));
+  document.getElementById('downloadBtn').style.display = 'inline-block';
+}
+
+function cardName2Title(str) {
+  return str.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+}
+
+function escHtml(str) {
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+async function downloadCard() {
+  const card = document.getElementById('theCard');
+  if (!card) return;
+
+  const btn = document.getElementById('downloadBtn');
+  btn.textContent = '⏳ Rendering...';
+  btn.disabled = true;
+
+  try {
+    const canvas = await html2canvas(card, {
+      backgroundColor: null,
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      logging: false,
+    });
+
+    const link = document.createElement('a');
+    link.download = 'github-magic-card.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  } catch (e) {
+    alert('Could not render card to image: ' + e.message);
+  }
+
+  btn.textContent = '⬇ Download Card';
+  btn.disabled = false;
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') generateCard();
+});
+</script>
+</body>
+</html>
